@@ -1,0 +1,3 @@
+name: "scan"
+shortDesc: "Scan and score Kubernetes resources for using security features powered by Kubesec.io"
+command: "./scan"
