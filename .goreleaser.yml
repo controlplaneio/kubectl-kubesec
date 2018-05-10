@@ -1,0 +1,13 @@
+builds:
+  - main: main.go
+    binary: scan
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+archive:
+  format: tar.gz
+  files:
+    - plugin.yaml

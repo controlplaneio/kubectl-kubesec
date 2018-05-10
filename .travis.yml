@@ -1,0 +1,15 @@
+sudo: required
+language: go
+
+go:
+  - 1.9.x
+
+script:
+  - make deploy
+
+deploy:
+  - provider: script
+    skip_cleanup: true
+    script: curl -sL http://git.io/goreleaser | bash
+    on:
+      tags: true
