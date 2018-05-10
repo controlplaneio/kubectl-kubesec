@@ -4,12 +4,11 @@ This is a kubectl plugin for scanning Kubernetes deployments with [kubesec.io](h
 
 ### Install
 
-Clone the repo in into your `GOPATH`, build the plugin and deploy it to `~/.kube/plugins/scan`:
+Download and extract the scan plugin to `~/.kube/plugins/scan`:
 
 ```bash
-git clone https://github.com/stefanprodan/kubectl-kubesec
-cd kubectl-kubesec
-make deploy
+mkdir -p ~/.kube/plugins/scan && \
+curl -sL https://github.com/stefanprodan/kubectl-kubesec/releases/download/0.1.0/kubectl-kubesec_0.1.0_`uname -s`_amd64.tar.gz | tar xvf - -C ~/.kube/plugins/scan
 ```
 
 ### Usage
