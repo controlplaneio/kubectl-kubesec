@@ -8,7 +8,7 @@ Download and extract the scan plugin to `~/.kube/plugins/scan`:
 
 ```bash
 mkdir -p ~/.kube/plugins/scan && \
-curl -sL https://github.com/stefanprodan/kubectl-kubesec/releases/download/0.1.0/kubectl-kubesec_0.1.0_`uname -s`_amd64.tar.gz | tar xvf - -C ~/.kube/plugins/scan
+curl -sL https://github.com/stefanprodan/kubectl-kubesec/releases/download/0.1.0/kubectl-kubesec_0.1.0_`uname -s`_amd64.tar.gz | tar xzvf - -C ~/.kube/plugins/scan
 ```
 
 ### Usage
