@@ -3,14 +3,10 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"mime/multipart"
-	"net/http"
 	"os"
+	"strings"
 
 	_ "github.com/golang/glog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,14 +22,110 @@ func init() {
 	flag.CommandLine.Set("v", os.Getenv("KUBECTL_PLUGINS_GLOBAL_FLAG_V"))
 }
 
+const (
+	usage   = "usage: kubectl plugin scan [pod|deployment|statefulset|daemonset]/name"
+	unknown = "unknown type must be pod, deployment, statefulset or daemonset"
+)
+
 func main() {
+
 	if len(os.Args) < 2 {
-		fmt.Println("usage: kubectl plugin scan DEPLOYMENT_NAME")
+		fmt.Println(usage)
 		os.Exit(1)
 	}
 
-	deploymentName := os.Args[1]
-	getDeployment(deploymentName)
+	resource := os.Args[1]
+	parts := strings.Split(resource, "/")
+
+	if len(parts) != 2 {
+		fmt.Println(usage)
+		os.Exit(1)
+	}
+
+	client, ns := loadConfig()
+	serializer := kjson.NewYAMLSerializer(kjson.DefaultMetaFactory, scheme.Scheme, scheme.Scheme)
+	var buffer bytes.Buffer
+	writer := bufio.NewWriter(&buffer)
+
+	switch parts[0] {
+	case "pod":
+		fmt.Println("scanning pod", parts[1])
+		pod, err := client.CoreV1().Pods(ns).Get(parts[1], metav1.GetOptions{})
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		pod.TypeMeta = metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		}
+		err = serializer.Encode(pod, writer)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	case "deployment":
+		fmt.Println("scanning deployment", parts[1])
+		dep, err := client.AppsV1beta2().Deployments(ns).Get(parts[1], metav1.GetOptions{})
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		dep.TypeMeta = metav1.TypeMeta{
+			Kind:       "Deployment",
+			APIVersion: "apps/v1",
+		}
+		err = serializer.Encode(dep, writer)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	case "statefulset":
+		fmt.Println("scanning statefulset", parts[1])
+		ss, err := client.AppsV1beta2().StatefulSets(ns).Get(parts[1], metav1.GetOptions{})
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		ss.TypeMeta = metav1.TypeMeta{
+			Kind:       "StatefulSet",
+			APIVersion: "apps/v1",
+		}
+		err = serializer.Encode(ss, writer)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	case "daemonset":
+		fmt.Println("scanning daemonset", parts[1])
+		ds, err := client.AppsV1beta2().DaemonSets(ns).Get(parts[1], metav1.GetOptions{})
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		ds.TypeMeta = metav1.TypeMeta{
+			Kind:       "DaemonSet",
+			APIVersion: "apps/v1",
+		}
+		err = serializer.Encode(ds, writer)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	default:
+		fmt.Println(parts[0], unknown)
+		os.Exit(1)
+	}
+
+	writer.Flush()
+
+	result, err := getResult(buffer)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	result.print(resource)
 }
 
 func loadConfig() (*kubernetes.Clientset, string) {
@@ -44,146 +136,4 @@ func loadConfig() (*kubernetes.Clientset, string) {
 	c := kubernetes.NewForConfigOrDie(restConfig)
 	ns, _, _ := kubeConfig.Namespace()
 	return c, ns
-}
-
-func getDeployment(deploymentName string) {
-	client, ns := loadConfig()
-	dep, err := client.AppsV1beta2().Deployments(ns).Get(deploymentName, metav1.GetOptions{})
-	if err != nil {
-		panic(err)
-	}
-
-	dep.TypeMeta = metav1.TypeMeta{
-		Kind:       "Deployment",
-		APIVersion: "apps/v1beta2",
-	}
-
-	e := kjson.NewYAMLSerializer(kjson.DefaultMetaFactory, scheme.Scheme, scheme.Scheme)
-
-	var b bytes.Buffer
-	writer := bufio.NewWriter(&b)
-	err = e.Encode(dep, writer)
-	if err != nil {
-		panic(err)
-	}
-	writer.Flush()
-	//fmt.Println(b.String())
-
-	bodyBuf := &bytes.Buffer{}
-	bodyWriter := multipart.NewWriter(bodyBuf)
-
-	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", "deployment.yaml")
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = io.Copy(fileWriter, &b)
-	if err != nil {
-		panic(err)
-	}
-
-	contentType := bodyWriter.FormDataContentType()
-	bodyWriter.Close()
-
-	resp, err := http.Post("https://kubesec.io/", contentType, bodyBuf)
-	if err != nil {
-		panic(err)
-	}
-
-	defer resp.Body.Close()
-	//fmt.Println("response Status:", resp.Status)
-	//fmt.Println("response Headers:", resp.Header)
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	if len(body) < 1 {
-		panic("Unknown result")
-	}
-
-	var result KubesecResult
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		panic(err)
-	}
-
-	result.print(deploymentName)
-}
-
-func postFile(filename string, targetUrl string) error {
-	bodyBuf := &bytes.Buffer{}
-	bodyWriter := multipart.NewWriter(bodyBuf)
-
-	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", filename)
-	if err != nil {
-		fmt.Println("error writing to buffer")
-		return err
-	}
-
-	fh, err := os.Open(filename)
-	if err != nil {
-		fmt.Println("error opening file")
-		return err
-	}
-	defer fh.Close()
-
-	_, err = io.Copy(fileWriter, fh)
-	if err != nil {
-		return err
-	}
-
-	contentType := bodyWriter.FormDataContentType()
-	bodyWriter.Close()
-
-	resp, err := http.Post(targetUrl, contentType, bodyBuf)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	result, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	fmt.Println(resp.Status)
-	fmt.Println(string(result))
-	return nil
-}
-
-type KubesecResult struct {
-	Score   int `json:"score"`
-	Scoring struct {
-		Critical []struct {
-			Selector string `json:"selector"`
-			Reason   string `json:"reason"`
-			Weight   int    `json:"weight"`
-		} `json:"critical"`
-		Advise []struct {
-			Selector string `json:"selector"`
-			Reason   string `json:"reason"`
-			Href     string `json:"href,omitempty"`
-		} `json:"advise"`
-	} `json:"scoring"`
-}
-
-func (r KubesecResult) print(resource string) {
-	fmt.Println(fmt.Sprintf("%v kubesec.io score %v", resource, r.Score))
-	fmt.Println("-----------------")
-	if len(r.Scoring.Critical) > 0 {
-		fmt.Println("Critical")
-		for i, el := range r.Scoring.Critical {
-			fmt.Println(fmt.Sprintf("%v. %v", i+1, el.Selector))
-			fmt.Println(el.Reason)
-
-		}
-		fmt.Println("-----------------")
-	}
-	if len(r.Scoring.Advise) > 0 {
-		fmt.Println("Advise")
-		for i, el := range r.Scoring.Advise {
-			fmt.Println(fmt.Sprintf("%v. %v", i+1, el.Selector))
-			fmt.Println(el.Reason)
-		}
-		fmt.Println("-----------------")
-	}
 }
