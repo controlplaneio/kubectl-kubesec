@@ -1,5 +1,7 @@
 # kubectl-kubesec
 
+[![Build Status](https://travis-ci.org/stefanprodan/kubectl-kubesec.svg?branch=master)](https://travis-ci.org/stefanprodan/kubectl-kubesec)
+
 This is a kubectl plugin for scanning Kubernetes pods, deployments, daemonsets and statefulsets with [kubesec.io](https://kubesec.io)
 
 ### Install
@@ -8,7 +10,7 @@ Download and extract the scan plugin to `~/.kube/plugins/scan`:
 
 ```bash
 mkdir -p ~/.kube/plugins/scan && \
-curl -sL https://github.com/stefanprodan/kubectl-kubesec/releases/download/0.1.0/kubectl-kubesec_0.2.0_`uname -s`_amd64.tar.gz | tar xzvf - -C ~/.kube/plugins/scan
+curl -sL https://github.com/stefanprodan/kubectl-kubesec/releases/download/0.2.0/kubectl-kubesec_0.2.0_`uname -s`_amd64.tar.gz | tar xzvf - -C ~/.kube/plugins/scan
 ```
 
 ### Usage
