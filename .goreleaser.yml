@@ -1,5 +1,5 @@
 builds:
-  - main: main.go
+  - main: .
     binary: scan
     goos:
       - windows
