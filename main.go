@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	_ "github.com/golang/glog"
+	"github.com/stefanprodan/kubectl-kubesec/pkg/kubesec"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kjson "k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"k8s.io/client-go/kubernetes"
@@ -119,13 +120,17 @@ func main() {
 
 	writer.Flush()
 
-	result, err := getResult(buffer)
+	result, err := kubesec.NewClient().ScanDefinition(buffer)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	if result.Error != "" {
+		fmt.Println(result.Error)
+		os.Exit(1)
+	}
 
-	result.print(resource)
+	result.Dump(os.Stdout)
 }
 
 func loadConfig() (*kubernetes.Clientset, string) {
