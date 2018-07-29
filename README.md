@@ -4,6 +4,8 @@
 
 This is a kubectl plugin for scanning Kubernetes pods, deployments, daemonsets and statefulsets with [kubesec.io](https://kubesec.io)
 
+For the admission controller see [kubesec-webhook](https://github.com/stefanprodan/kubesec-webhook)
+
 ### Install
 
 Download and extract the scan plugin to `~/.kube/plugins/scan`:
