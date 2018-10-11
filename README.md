@@ -13,6 +13,8 @@ Download and extract the scan plugin to `~/.kube/plugins/scan`:
 ```bash
 mkdir -p ~/.kube/plugins/scan && \
 curl -sL https://github.com/stefanprodan/kubectl-kubesec/releases/download/0.2.0/kubectl-kubesec_0.2.0_`uname -s`_amd64.tar.gz | tar xzvf - -C ~/.kube/plugins/scan
+mv ~/.kube/plugins/scan/scan ~/.kube/plugins/scan/kubectl-scan
+export PATH=$PATH:~/.kube/plugins/scan
 ```
 
 ### Usage
@@ -20,7 +22,7 @@ curl -sL https://github.com/stefanprodan/kubectl-kubesec/releases/download/0.2.0
 Scan a Deployment:
 
 ```bash
-kubectl -n kube-system plugin scan deployment/kubernetes-dashboard
+kubectl -n kube-system kubectl-scan deployment/kubernetes-dashboard
 ```
 
 Result:
@@ -44,7 +46,7 @@ Drop all capabilities and add only those required to reduce syscall attack surfa
 Scan a DaemonSet:
 
 ```bash
-kubectl -n weave plugin scan daemonset/weave-scope-agent
+kubectl -n weave kubectl-scan daemonset/weave-scope-agent
 ```
 
 Result:
@@ -66,7 +68,7 @@ Mounting the docker.socket leaks information about other containers and can allo
 Scan a StatefulSet:
 
 ```bash
-kubectl plugin scan statefulset/memcached
+kubectl kubectl-scan statefulset/memcached
 ```
 
 Result:
@@ -89,7 +91,7 @@ Run as a high-UID user to avoid conflicts with the host's user table
 Scan a Pod:
 
 ```bash
-kubectl -n kube-system plugin scan pod/tiller-deploy-5c688d5f9b-ztjbt
+kubectl -n kube-system kubectl-scan pod/tiller-deploy-5c688d5f9b-ztjbt
 ```
 
 Result:
