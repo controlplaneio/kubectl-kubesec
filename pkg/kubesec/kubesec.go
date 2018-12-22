@@ -78,25 +78,25 @@ type KubesecResult struct {
 
 // Dump writes the result in a human-readable format to the specified writer.
 func (r *KubesecResult) Dump(w io.Writer) {
-	io.WriteString(w, fmt.Sprintf("kubesec.io score: %v", r.Score))
-	io.WriteString(w, "-----------------")
+	fmt.Fprintf(w, "kubesec.io score: %v\n", r.Score)
+	fmt.Fprintln(w, "-----------------")
 	if len(r.Scoring.Critical) > 0 {
-		io.WriteString(w, "Critical")
+		fmt.Fprintln(w, "Critical")
 		for i, el := range r.Scoring.Critical {
-			io.WriteString(w, fmt.Sprintf("%v. %v", i+1, el.Selector))
+			fmt.Fprintf(w, "%v. %v\n", i+1, el.Selector)
 			if len(el.Reason) > 0 {
-				io.WriteString(w, el.Reason)
+				fmt.Fprintln(w, el.Reason)
 			}
 
 		}
-		io.WriteString(w, "-----------------")
+		fmt.Fprintln(w, "-----------------")
 	}
 	if len(r.Scoring.Advise) > 0 {
-		io.WriteString(w, "Advise")
+		fmt.Fprintf(w, "Advise")
 		for i, el := range r.Scoring.Advise {
-			io.WriteString(w, fmt.Sprintf("%v. %v", i+1, el.Selector))
+			fmt.Fprintf(w, "%v. %v\n", i+1, el.Selector)
 			if len(el.Reason) > 0 {
-				io.WriteString(w, el.Reason)
+				fmt.Fprintln(w, el.Reason)
 			}
 		}
 	}
