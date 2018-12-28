@@ -8,12 +8,10 @@ For the admission controller see [kubesec-webhook](https://github.com/stefanprod
 
 ### Install
 
-Download and extract the scan plugin to `~/.kube/plugins/scan`:
-
-```bash
-mkdir -p ~/.kube/plugins/scan && \
-curl -sL https://github.com/stefanprodan/kubectl-kubesec/releases/download/0.2.0/kubectl-kubesec_0.2.0_`uname -s`_amd64.tar.gz | tar xzvf - -C ~/.kube/plugins/scan
-```
+1. [Install krew](https://github.com/GoogleContainerTools/krew) plugin manager
+   for kubectl.
+2. Run `kubectl krew install kubesec-scan`.
+3. Start using by running `kubectl kubesec-scan`.
 
 ### Usage
 
