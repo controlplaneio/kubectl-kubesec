@@ -8,17 +8,37 @@ For the admission controller see [kubesec-webhook](https://github.com/stefanprod
 
 ### Install
 
+#### Install with krew
+
 1. [Install krew](https://github.com/GoogleContainerTools/krew) plugin manager
    for kubectl.
 2. Run `kubectl krew install kubesec-scan`.
 3. Start using by running `kubectl kubesec-scan`.
+
+#### Install with curl
+
+For Kubernetes 1.12 or newer:
+
+```bash
+mkdir -p ~/.kube/plugins/scan && \
+curl -sL https://github.com/stefanprodan/kubectl-kubesec/releases/download/1.0.0/kubectl-kubesec_1.0.0_`uname -s`_amd64.tar.gz | tar xzvf - -C ~/.kube/plugins/scan
+mv ~/.kube/plugins/scan/scan ~/.kube/plugins/scan/kubectl-scan
+export PATH=$PATH:~/.kube/plugins/scan
+```
+
+For Kubernetes older than 1.12:
+
+```bash
+mkdir -p ~/.kube/plugins/scan && \
+curl -sL https://github.com/stefanprodan/kubectl-kubesec/releases/download/0.3.1/kubectl-kubesec_0.3.1_`uname -s`_amd64.tar.gz | tar xzvf - -C ~/.kube/plugins/scan
+```
 
 ### Usage
 
 Scan a Deployment:
 
 ```bash
-kubectl -n kube-system plugin scan deployment/kubernetes-dashboard
+kubectl scan -n kube-system deployment kubernetes-dashboard
 ```
 
 Result:
@@ -42,7 +62,7 @@ Drop all capabilities and add only those required to reduce syscall attack surfa
 Scan a DaemonSet:
 
 ```bash
-kubectl -n weave plugin scan daemonset/weave-scope-agent
+kubectl scan -n weave daemonset weave-scope-agent
 ```
 
 Result:
@@ -64,7 +84,7 @@ Mounting the docker.socket leaks information about other containers and can allo
 Scan a StatefulSet:
 
 ```bash
-kubectl plugin scan statefulset/memcached
+kubectl scan statefulset memcached
 ```
 
 Result:
@@ -87,7 +107,7 @@ Run as a high-UID user to avoid conflicts with the host's user table
 Scan a Pod:
 
 ```bash
-kubectl -n kube-system plugin scan pod/tiller-deploy-5c688d5f9b-ztjbt
+kubectl scan -n kube-system pod tiller-deploy-5c688d5f9b-ztjbt
 ```
 
 Result:
