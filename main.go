@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	_ "github.com/golang/glog"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"github.com/stefanprodan/kubectl-kubesec/pkg/cmd"
 	"os"
 	"strings"
