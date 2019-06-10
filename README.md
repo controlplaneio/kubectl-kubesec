@@ -143,3 +143,5 @@ Run as a high-UID user to avoid conflicts with the host's user table
 5. containers[] .securityContext .capabilities .drop | index("ALL")
 Drop all capabilities and add only those required to reduce syscall attack surface
 ```
+
+Note that you can change the kubesec API address with the `KUBESEC_URL` env var.
