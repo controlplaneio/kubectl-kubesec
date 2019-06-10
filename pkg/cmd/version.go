@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/controlplaneio/kubectl-kubesec/pkg/version"
 	"github.com/spf13/cobra"
-	"github.com/stefanprodan/kubectl-kubesec/pkg/version"
 )
 
 var versionCmd = &cobra.Command{

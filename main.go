@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/controlplaneio/kubectl-kubesec/pkg/cmd"
 	_ "github.com/golang/glog"
-	"github.com/stefanprodan/kubectl-kubesec/pkg/cmd"
 	"os"
 	"strings"
 )

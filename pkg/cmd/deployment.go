@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/controlplaneio/kubectl-kubesec/pkg/kubesec"
 	"github.com/spf13/cobra"
-	"github.com/stefanprodan/kubectl-kubesec/pkg/kubesec"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 )

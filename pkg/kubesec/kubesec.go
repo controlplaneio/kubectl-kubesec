@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"mime/multipart"
 	"net/http"
+	"os"
 )
 
 // KubesecClient represent a client for kubesec.io.
@@ -22,20 +22,12 @@ func NewClient() *KubesecClient {
 
 // ScanDefinition scans the provided resource definition.
 func (kc *KubesecClient) ScanDefinition(def bytes.Buffer) (*KubesecResult, error) {
-	bodyBuf := &bytes.Buffer{}
-	bodyWriter := multipart.NewWriter(bodyBuf)
-	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", "object.yaml")
-	if err != nil {
-		return nil, err
+	url := os.Getenv("KUBESEC_URL")
+	if url == "" {
+		url = "https://v2.kubesec.io/scan"
 	}
-	_, err = io.Copy(fileWriter, &def)
-	if err != nil {
-		return nil, err
-	}
-	contentType := bodyWriter.FormDataContentType()
-	bodyWriter.Close()
 
-	resp, err := http.Post("https://kubesec.io/", contentType, bodyBuf)
+	resp, err := http.Post(url, "application/yaml", bytes.NewBuffer(def.Bytes()))
 	if err != nil {
 		return nil, err
 	}
@@ -49,13 +41,14 @@ func (kc *KubesecClient) ScanDefinition(def bytes.Buffer) (*KubesecResult, error
 		return nil, errors.New("failed to scan definition")
 	}
 
-	var result KubesecResult
+	var result []KubesecResult
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return nil, err
+		fmt.Println(string(body))
+		return nil, fmt.Errorf("json unmarshal error: %s", err.Error())
 	}
 
-	return &result, nil
+	return &result[0], nil
 }
 
 // KubesecResult represents a result returned by kubesec.io.
@@ -92,7 +85,7 @@ func (r *KubesecResult) Dump(w io.Writer) {
 		fmt.Fprintln(w, "-----------------")
 	}
 	if len(r.Scoring.Advise) > 0 {
-		fmt.Fprintf(w, "Advise")
+		fmt.Fprintln(w, "Advise")
 		for i, el := range r.Scoring.Advise {
 			fmt.Fprintf(w, "%v. %v\n", i+1, el.Selector)
 			if len(el.Reason) > 0 {
