@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	_ "github.com/golang/glog"
-	"github.com/stefanprodan/kubectl-kubesec/pkg/cmd"
+	"github.com/controlplaneio/kubectl-kubesec/pkg/cmd"
 	"os"
 	"strings"
 )

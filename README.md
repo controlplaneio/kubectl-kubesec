@@ -1,10 +1,10 @@
 # kubectl-kubesec
 
-[![Build Status](https://travis-ci.org/stefanprodan/kubectl-kubesec.svg?branch=master)](https://travis-ci.org/stefanprodan/kubectl-kubesec)
+[![Build Status](https://travis-ci.org/controlplaneio/kubectl-kubesec.svg?branch=master)](https://travis-ci.org/controlplaneio/kubectl-kubesec)
 
 This is a kubectl plugin for scanning Kubernetes pods, deployments, daemonsets and statefulsets with [kubesec.io](https://kubesec.io)
 
-For the admission controller see [kubesec-webhook](https://github.com/stefanprodan/kubesec-webhook)
+For the admission controller see [kubesec-webhook](https://github.com/controlplaneio/kubesec-webhook)
 
 ### Install
 
@@ -21,7 +21,7 @@ For Kubernetes 1.12 or newer:
 
 ```bash
 mkdir -p ~/.kube/plugins/scan && \
-curl -sL https://github.com/stefanprodan/kubectl-kubesec/releases/download/1.0.0/kubectl-kubesec_1.0.0_`uname -s`_amd64.tar.gz | tar xzvf - -C ~/.kube/plugins/scan
+curl -sL https://github.com/controlplaneio/kubectl-kubesec/releases/download/1.0.0/kubectl-kubesec_1.0.0_`uname -s`_amd64.tar.gz | tar xzvf - -C ~/.kube/plugins/scan
 mv ~/.kube/plugins/scan/scan ~/.kube/plugins/scan/kubectl-scan
 export PATH=$PATH:~/.kube/plugins/scan
 ```
@@ -30,7 +30,7 @@ For Kubernetes older than 1.12:
 
 ```bash
 mkdir -p ~/.kube/plugins/scan && \
-curl -sL https://github.com/stefanprodan/kubectl-kubesec/releases/download/0.3.1/kubectl-kubesec_0.3.1_`uname -s`_amd64.tar.gz | tar xzvf - -C ~/.kube/plugins/scan
+curl -sL https://github.com/controlplaneio/kubectl-kubesec/releases/download/0.3.1/kubectl-kubesec_0.3.1_`uname -s`_amd64.tar.gz | tar xzvf - -C ~/.kube/plugins/scan
 ```
 
 ### Usage
