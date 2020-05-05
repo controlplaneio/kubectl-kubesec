@@ -38,7 +38,7 @@ curl -sL https://github.com/controlplaneio/kubectl-kubesec/releases/download/0.3
 Scan a Deployment:
 
 ```bash
-kubectl scan -n kube-system deployment kubernetes-dashboard
+kubectl kubesec-scan -n kube-system deployment kubernetes-dashboard
 ```
 
 Result:
@@ -62,7 +62,7 @@ Drop all capabilities and add only those required to reduce syscall attack surfa
 Scan a DaemonSet:
 
 ```bash
-kubectl scan -n weave daemonset weave-scope-agent
+kubectl kubesec-scan -n weave daemonset weave-scope-agent
 ```
 
 Result:
@@ -84,7 +84,7 @@ Mounting the docker.socket leaks information about other containers and can allo
 Scan a StatefulSet:
 
 ```bash
-kubectl scan statefulset memcached
+kubectl kubesec-scan statefulset memcached
 ```
 
 Result:
@@ -107,7 +107,7 @@ Run as a high-UID user to avoid conflicts with the host's user table
 Scan a Pod:
 
 ```bash
-kubectl scan -n kube-system pod tiller-deploy-5c688d5f9b-ztjbt
+kubectl kubesec-scan -n kube-system pod tiller-deploy-5c688d5f9b-ztjbt
 ```
 
 Result:
