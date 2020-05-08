@@ -11,3 +11,4 @@ archive:
   format: tar.gz
   files:
     - plugin.yaml
+    - LICENSE
