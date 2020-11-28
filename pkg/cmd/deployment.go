@@ -5,10 +5,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/controlplaneio/kubectl-kubesec/pkg/kubesec"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
+
+	"github.com/controlplaneio/kubectl-kubesec/pkg/kubesec"
+	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var deploymentCmd = &cobra.Command{
@@ -25,7 +26,7 @@ var deploymentCmd = &cobra.Command{
 		writer := bufio.NewWriter(&buffer)
 
 		fmt.Println("scanning deployment", name, "in namespace", namespace)
-		dep, err := kubeClient.AppsV1beta2().Deployments(namespace).Get(name, metav1.GetOptions{})
+		dep, err := kubeClient.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

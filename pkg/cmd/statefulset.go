@@ -5,10 +5,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/controlplaneio/kubectl-kubesec/pkg/kubesec"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
+
+	"github.com/controlplaneio/kubectl-kubesec/pkg/kubesec"
+	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var statefulsetCmd = &cobra.Command{
@@ -25,7 +26,7 @@ var statefulsetCmd = &cobra.Command{
 		writer := bufio.NewWriter(&buffer)
 
 		fmt.Println("scanning statefulset", name, "in namespace", namespace)
-		ss, err := kubeClient.AppsV1beta2().StatefulSets(namespace).Get(name, metav1.GetOptions{})
+		ss, err := kubeClient.AppsV1().StatefulSets(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
