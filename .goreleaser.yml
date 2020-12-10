@@ -1,14 +1,29 @@
+before:
+  hooks:
+    - go mod tidy
+
 builds:
   - main: .
-    binary: scan
+    binary: kubectl-scan
     goos:
-      - windows
       - darwin
       - linux
     goarch:
       - amd64
-archive:
-  format: tar.gz
-  files:
-    - plugin.yaml
-    - LICENSE
+      - 386
+    ignore:
+      - goos: darwin
+        goarch: 386
+    env:
+      - CGO_ENABLED=0
+
+checksum:
+  name_template: "{{ .ProjectName }}_checksums.txt"
+
+archives:
+  - name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    files:
+      - plugin.yaml
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
