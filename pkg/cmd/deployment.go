@@ -26,7 +26,7 @@ var deploymentCmd = &cobra.Command{
 		writer := bufio.NewWriter(&buffer)
 
 		fmt.Println("scanning deployment", name, "in namespace", namespace)
-		dep, err := kubeClient.AppsV1beta2().Deployments(namespace).Get(name, metav1.GetOptions{})
+		dep, err := kubeClient.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

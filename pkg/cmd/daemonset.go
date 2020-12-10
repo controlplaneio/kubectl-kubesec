@@ -26,7 +26,7 @@ var daemonsetCmd = &cobra.Command{
 		writer := bufio.NewWriter(&buffer)
 
 		fmt.Println("scanning daemonset", name, "in namespace", namespace)
-		ds, err := kubeClient.AppsV1beta2().DaemonSets(namespace).Get(name, metav1.GetOptions{})
+		ds, err := kubeClient.AppsV1().DaemonSets(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

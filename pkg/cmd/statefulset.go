@@ -26,7 +26,7 @@ var statefulsetCmd = &cobra.Command{
 		writer := bufio.NewWriter(&buffer)
 
 		fmt.Println("scanning statefulset", name, "in namespace", namespace)
-		ss, err := kubeClient.AppsV1beta2().StatefulSets(namespace).Get(name, metav1.GetOptions{})
+		ss, err := kubeClient.AppsV1().StatefulSets(namespace).Get(name, metav1.GetOptions{})
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
