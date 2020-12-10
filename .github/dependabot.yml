@@ -1,0 +1,22 @@
+---
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+      time: "06:00"
+      timezone: UTC
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: chore
+      include: scope
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: daily
+      time: "06:00"
+      timezone: UTC
+    commit-message:
+      prefix: chore
+      include: scope
