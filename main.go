@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	_ "github.com/golang/glog"
-	"github.com/controlplaneio/kubectl-kubesec/pkg/cmd"
 	"os"
 	"strings"
+
+	"github.com/controlplaneio/kubectl-kubesec/v2/pkg/cmd"
+	_ "github.com/golang/glog"
 )
 
 func init() {

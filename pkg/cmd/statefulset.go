@@ -5,10 +5,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/controlplaneio/kubectl-kubesec/pkg/kubesec"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
+
+	"github.com/controlplaneio/kubectl-kubesec/v2/pkg/kubesec"
+	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var statefulsetCmd = &cobra.Command{
