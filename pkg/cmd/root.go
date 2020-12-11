@@ -4,9 +4,9 @@ import (
 	"github.com/spf13/cobra"
 	kjson "k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"k8s.io/client-go/kubernetes"
+
 	"k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	"k8s.io/kubectl/pkg/pluginutils"
 )
 
 var RootCmd = &cobra.Command{

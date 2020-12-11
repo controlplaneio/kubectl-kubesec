@@ -3,9 +3,11 @@ package cmd
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/controlplaneio/kubectl-kubesec/v2/pkg/kubesec"
 	"github.com/spf13/cobra"
@@ -26,7 +28,9 @@ var deploymentCmd = &cobra.Command{
 		writer := bufio.NewWriter(&buffer)
 
 		fmt.Println("scanning deployment", name, "in namespace", namespace)
-		dep, err := kubeClient.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
+		dep, err := kubeClient.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

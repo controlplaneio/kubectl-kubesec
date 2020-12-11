@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/controlplaneio/kubectl-kubesec/v2/pkg/cmd"
-	_ "github.com/golang/glog"
 )
 
 func init() {
