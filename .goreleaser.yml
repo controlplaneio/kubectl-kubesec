@@ -4,10 +4,11 @@ before:
 
 builds:
   - main: .
-    binary: scan
+    binary: kubectl-scan
     goos:
       - darwin
       - linux
+      - windows
     goarch:
       - amd64
       - 386
