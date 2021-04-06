@@ -4,7 +4,7 @@ before:
 
 builds:
   - main: .
-    binary: kubectl-scan
+    binary: scan
     goos:
       - darwin
       - linux
