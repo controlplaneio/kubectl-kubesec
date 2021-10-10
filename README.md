@@ -2,11 +2,11 @@
 
 [![Build Status](https://travis-ci.org/controlplaneio/kubectl-kubesec.svg?branch=master)](https://travis-ci.org/controlplaneio/kubectl-kubesec)
 
-This is a kubectl plugin for scanning Kubernetes pods, deployments, daemonsets and statefulsets with [kubesec.io](https://kubesec.io)
+This is a kubectl plugin for scanning Kubernetes pods, deployments, daemonsets and statefulsets with [kubesec.io](https://kubesec.io). By default the plugin will send scan requests to the hosted version of [kubesec.io](https://kubesec.io). However, it is also possible to self host the scanning service and use that for scanning instead.
 
 For the admission controller see [kubesec-webhook](https://github.com/controlplaneio/kubesec-webhook)
 
-### Install
+The latest release of this plugin is fully compatible with the API version V2 of kubesec documented at [kubesec.io](https://kubesec.io).
 
 #### Install with krew
 
@@ -35,15 +35,24 @@ curl -sL https://github.com/controlplaneio/kubectl-kubesec/releases/download/0.3
 
 ### Usage
 
+By default the plugin uses the hosted version of [kubesec.io](https://kubesec.io). However, you can run the hosted service locally. For example using docker:
+
+```bash
+## 
+docker run -d -p 8080:8080 kubesec/kubesec:v2 http 8080
+```
+
 Scan a Deployment:
 
 ```bash
 kubectl kubesec-scan -n kube-system deployment kubernetes-dashboard
+# if you are running a self hosted version of kubese.io using docker then:
+kubectl kubesec-scan -n kube-system deployment kubernetes-dashboard --url http://localhost:8080
 ```
 
 Result:
 
-```
+```bash
 kubernetes-dashboard kubesec.io score 7
 -----------------
 Advise
@@ -63,11 +72,13 @@ Scan a DaemonSet:
 
 ```bash
 kubectl kubesec-scan -n weave daemonset weave-scope-agent
+# if you are running a self hosted version of kubese.io using then:
+kubectl kubesec-scan -n weave daemonset weave-scope-agent --url http://localhost:8080
 ```
 
 Result:
 
-```
+```bash
 daemonset/weave-scope-agent kubesec.io score -54
 -----------------
 Critical
@@ -85,11 +96,13 @@ Scan a StatefulSet:
 
 ```bash
 kubectl kubesec-scan statefulset memcached
+# if you are running a self hosted version of kubese.io then:
+kubectl kubesec-scan statefulset memcached --url http://localhost:8080
 ```
 
 Result:
 
-```
+```bash
 statefulset/memcached kubesec.io score 2
 -----------------
 Advise
@@ -108,11 +121,13 @@ Scan a Pod:
 
 ```bash
 kubectl kubesec-scan -n kube-system pod tiller-deploy-5c688d5f9b-ztjbt
+# if you are running a self hosted version of kubese.io then:
+kubectl kubesec-scan -n kube-system pod tiller-deploy-5c688d5f9b-ztjbt --url http://localhost:8080 
 ```
 
 Result:
 
-```
+```bash
 pod/tiller-deploy-5c688d5f9b-ztjbt kubesec.io score 3
 -----------------
 Advise
