@@ -45,19 +45,23 @@ var deploymentCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		writer.Flush()
+		if err := writer.Flush(); err != nil {
+			return err
+		}
 
-		result, err := kubesec.NewClient().ScanDefinition(buffer)
+		kc := kubesec.NewClient(scanURL, scanTimeOut)
+
+		rs, err := kc.ScanDefinition(buffer)
+
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		if result.Error != "" {
-			fmt.Println(result.Error)
+
+		if err := rs.Dump(os.Stdout); err != nil {
+			fmt.Println(err)
 			os.Exit(1)
 		}
-
-		result.Dump(os.Stdout)
 
 		return nil
 	},
