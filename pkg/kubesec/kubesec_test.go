@@ -3,6 +3,7 @@ package kubesec
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -15,7 +16,10 @@ import (
 func NewHTTPTestServer(code int, body string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(code)
-		w.Write([]byte(body))
+		_, err := w.Write([]byte(body))
+		if err != nil {
+			fmt.Println("error writing HTTP response")
+		}
 	}))
 }
 
