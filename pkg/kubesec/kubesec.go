@@ -2,60 +2,84 @@ package kubesec
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"mime/multipart"
 	"net/http"
+	"strings"
+	"time"
 )
 
-// KubesecClient represent a client for kubesec.io.
+// KubesecClient represent a client for kubesec.io
 type KubesecClient struct {
+	URL        string // URL to send the request for scanning
+	TimeOutSec int    // Scan timeout in seconds
 }
 
 // NewClient returns a new client for kubesec.io.
-func NewClient() *KubesecClient {
-	return &KubesecClient{}
+func NewClient(url string, timeOutSec int) *KubesecClient {
+	return &KubesecClient{
+		URL:        url,
+		TimeOutSec: timeOutSec,
+	}
 }
 
 // ScanDefinition scans the provided resource definition.
-func (kc *KubesecClient) ScanDefinition(def bytes.Buffer) (*KubesecResult, error) {
-	bodyBuf := &bytes.Buffer{}
-	bodyWriter := multipart.NewWriter(bodyBuf)
-	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", "object.yaml")
-	if err != nil {
-		return nil, err
-	}
-	_, err = io.Copy(fileWriter, &def)
-	if err != nil {
-		return nil, err
-	}
-	contentType := bodyWriter.FormDataContentType()
-	bodyWriter.Close()
+func (kc *KubesecClient) ScanDefinition(def bytes.Buffer) (KubeSecResults, error) {
 
-	resp, err := http.Post("https://kubesec.io/", contentType, bodyBuf)
+	ctx := context.Background()
+
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(kc.TimeOutSec)*time.Second)
+
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, kc.URL, &def)
+
 	if err != nil {
 		return nil, err
 	}
+
+	contentType := "application/x-www-form-urlencoded"
+
+	req.Header.Set("Content-Type", contentType)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req.WithContext(ctx))
+
+	if err != nil {
+		return nil, err
+	}
+
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("got %v response from %v instead of 200 OK", resp.StatusCode, kc.URL)
+	}
+
 	body, err := ioutil.ReadAll(resp.Body)
+
 	if err != nil {
 		return nil, err
 	}
+
 	if len(body) < 1 {
 		return nil, errors.New("failed to scan definition")
 	}
 
-	var result KubesecResult
-	err = json.Unmarshal(body, &result)
+	// API version v2 of Kubesec available at https://v2.kubesec.io returns a slice of results
+	var results []KubesecResult
+
+	err = json.Unmarshal(body, &results)
+
 	if err != nil {
 		return nil, err
 	}
 
-	return &result, nil
+	return results, nil
 }
 
 // KubesecResult represents a result returned by kubesec.io.
@@ -100,4 +124,22 @@ func (r *KubesecResult) Dump(w io.Writer) {
 			}
 		}
 	}
+}
+
+// KubeSecResults - holds a slice of scan results
+type KubeSecResults []KubesecResult
+
+// Dump - calls upstream Dump function and returns an error if any scan object has non-empty error field
+func (r KubeSecResults) Dump(w io.Writer) error {
+	var msg string
+	for _, result := range r {
+		if result.Error != "" {
+			msg = result.Error + "," + msg
+		}
+		result.Dump(w)
+	}
+	if msg != "" {
+		return errors.New(strings.TrimSpace(msg))
+	}
+	return nil
 }

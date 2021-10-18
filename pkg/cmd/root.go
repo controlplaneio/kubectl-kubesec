@@ -19,14 +19,18 @@ kubesec.io command line utilities`,
 }
 
 var (
-	namespace  string
-	kubeClient *kubernetes.Clientset
-	serializer *kjson.Serializer
+	namespace   string
+	kubeClient  *kubernetes.Clientset
+	serializer  *kjson.Serializer
+	scanTimeOut int
+	scanURL     string
 )
 
 func init() {
 	// global flags
 	RootCmd.PersistentFlags().StringVarP(&namespace, "namespace", "n", "default", "Kubernetes namespace")
+	RootCmd.PersistentFlags().IntVarP(&scanTimeOut, "timeout", "t", 120, "Scan timeout in seconds")
+	RootCmd.PersistentFlags().StringVarP(&scanURL, "url", "u", "https://v2.kubesec.io", "URL to send the request for scanning")
 
 	// client
 	kubeClient = loadConfig()
