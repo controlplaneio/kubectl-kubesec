@@ -1,108 +1,99 @@
 package kubesec
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"net/http"
-	"strings"
-	"time"
+
+	"github.com/controlplaneio/kubesec/v2/pkg/ruler"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
-// KubesecClient represent a client for kubesec.io
-type KubesecClient struct {
-	URL        string // URL to send the request for scanning
-	TimeOutSec int    // Scan timeout in seconds
+// Client represent a client for kubesec.
+type Client struct {
 }
 
-// NewClient returns a new client for kubesec.io.
-func NewClient(url string, timeOutSec int) *KubesecClient {
-	return &KubesecClient{
-		URL:        url,
-		TimeOutSec: timeOutSec,
+// NewClient returns a new client for kubesec.
+func NewClient() *Client {
+	return &Client{}
+}
+
+func newLogger(logLevel string, zapEncoding string) (*zap.SugaredLogger, error) {
+	level := zap.NewAtomicLevelAt(zapcore.InfoLevel)
+	switch logLevel {
+	case "debug":
+		level = zap.NewAtomicLevelAt(zapcore.DebugLevel)
+	case "info":
+		level = zap.NewAtomicLevelAt(zapcore.InfoLevel)
+	case "warn":
+		level = zap.NewAtomicLevelAt(zapcore.WarnLevel)
+	case "error":
+		level = zap.NewAtomicLevelAt(zapcore.ErrorLevel)
+	case "fatal":
+		level = zap.NewAtomicLevelAt(zapcore.FatalLevel)
+	case "panic":
+		level = zap.NewAtomicLevelAt(zapcore.PanicLevel)
 	}
+
+	zapEncoderConfig := zapcore.EncoderConfig{
+		TimeKey:        "timestamp",
+		LevelKey:       "severity",
+		NameKey:        "logger",
+		CallerKey:      "caller",
+		MessageKey:     "message",
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.LowercaseLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.SecondsDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
+	}
+
+	zapConfig := zap.Config{
+		Level:       level,
+		Development: false,
+		Sampling: &zap.SamplingConfig{
+			Initial:    100,
+			Thereafter: 100,
+		},
+		Encoding:         zapEncoding,
+		EncoderConfig:    zapEncoderConfig,
+		OutputPaths:      []string{"stderr"},
+		ErrorOutputPaths: []string{"stderr"},
+	}
+
+	logger, err := zapConfig.Build()
+	if err != nil {
+		return nil, err
+	}
+	return logger.Sugar(), nil
 }
 
 // ScanDefinition scans the provided resource definition.
-func (kc *KubesecClient) ScanDefinition(def bytes.Buffer) (KubeSecResults, error) {
-
-	ctx := context.Background()
-
-	ctx, cancel := context.WithTimeout(ctx, time.Duration(kc.TimeOutSec)*time.Second)
-
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, kc.URL, &def)
-
+func (kc *Client) ScanDefinition(def []byte) (*ruler.Report, error) {
+	var logger *zap.SugaredLogger
+	logger, err := newLogger("info", "console")
 	if err != nil {
 		return nil, err
 	}
 
-	contentType := "application/x-www-form-urlencoded"
-
-	req.Header.Set("Content-Type", contentType)
-
-	client := &http.Client{}
-
-	resp, err := client.Do(req.WithContext(ctx))
-
+	results, err := ruler.NewRuleset(logger).Run("SCAN", def, "")
 	if err != nil {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("got %v response from %v instead of 200 OK", resp.StatusCode, kc.URL)
+	if len(results) != 1 {
+		return nil, errors.New("Unexpected amount of results")
 	}
+	result := results[0]
 
-	body, err := ioutil.ReadAll(resp.Body)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(body) < 1 {
-		return nil, errors.New("failed to scan definition")
-	}
-
-	// API version v2 of Kubesec available at https://v2.kubesec.io returns a slice of results
-	var results []KubesecResult
-
-	err = json.Unmarshal(body, &results)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return results, nil
+	return &result, nil
 }
 
-// KubesecResult represents a result returned by kubesec.io.
-type KubesecResult struct {
-	Error   string `json:"error"`
-	Score   int    `json:"score"`
-	Scoring struct {
-		Critical []struct {
-			Selector string `json:"selector"`
-			Reason   string `json:"reason"`
-			Weight   int    `json:"weight"`
-		} `json:"critical"`
-		Advise []struct {
-			Selector string `json:"selector"`
-			Reason   string `json:"reason"`
-			Href     string `json:"href,omitempty"`
-		} `json:"advise"`
-	} `json:"scoring"`
-}
-
-// Dump writes the result in a human-readable format to the specified writer.
-func (r *KubesecResult) Dump(w io.Writer) {
-	fmt.Fprintf(w, "kubesec.io score: %v\n", r.Score)
+// DumpReport writes the result in a human-readable format to the specified writer.
+func DumpReport(r *ruler.Report, w io.Writer) {
+	fmt.Fprintf(w, "kubesec score: %v\n", r.Score)
 	fmt.Fprintln(w, "-----------------")
 	if len(r.Scoring.Critical) > 0 {
 		fmt.Fprintln(w, "Critical")
@@ -124,22 +115,4 @@ func (r *KubesecResult) Dump(w io.Writer) {
 			}
 		}
 	}
-}
-
-// KubeSecResults - holds a slice of scan results
-type KubeSecResults []KubesecResult
-
-// Dump - calls upstream Dump function and returns an error if any scan object has non-empty error field
-func (r KubeSecResults) Dump(w io.Writer) error {
-	var msg string
-	for _, result := range r {
-		if result.Error != "" {
-			msg = result.Error + "," + msg
-		}
-		result.Dump(w)
-	}
-	if msg != "" {
-		return errors.New(strings.TrimSpace(msg))
-	}
-	return nil
 }

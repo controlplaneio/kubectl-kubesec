@@ -13,9 +13,9 @@ import (
 
 var RootCmd = &cobra.Command{
 	Use:   "scan",
-	Short: "kubesec.io kubectl plugin",
+	Short: "kubesec kubectl plugin",
 	Long: `
-kubesec.io command line utilities`,
+kubesec command line utilities`,
 }
 
 var (
