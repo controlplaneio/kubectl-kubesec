@@ -1,9 +1,8 @@
 package cmd
 
 import (
-	"bufio"
-	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -16,6 +15,7 @@ import (
 
 var podCmd = &cobra.Command{
 	Use:     `pod [name]`,
+	Aliases: []string{"po"},
 	Short:   "Scans pod object",
 	Example: `  pod podinfo --namespace=default`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -23,9 +23,6 @@ var podCmd = &cobra.Command{
 			return errors.New("pod name is required")
 		}
 		name := args[0]
-
-		var buffer bytes.Buffer
-		writer := bufio.NewWriter(&buffer)
 
 		fmt.Println("scanning pod", name, "in namespace", namespace)
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -39,28 +36,20 @@ var podCmd = &cobra.Command{
 			Kind:       "Pod",
 			APIVersion: "v1",
 		}
-		err = serializer.Encode(pod, writer)
+		var buf []byte
+		buf, err = json.Marshal(pod)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		if err := writer.Flush(); err != nil {
-			return err
-		}
-
-		kc := kubesec.NewClient(scanURL, scanTimeOut)
-		rs, err := kc.ScanDefinition(buffer)
-
+		result, err := kubesec.NewClient().ScanDefinition(buf)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		if err := rs.Dump(os.Stdout); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		kubesec.DumpReport(result, os.Stdout)
 
 		return nil
 	},

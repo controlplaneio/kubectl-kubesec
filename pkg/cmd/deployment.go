@@ -1,9 +1,8 @@
 package cmd
 
 import (
-	"bufio"
-	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -16,6 +15,7 @@ import (
 
 var deploymentCmd = &cobra.Command{
 	Use:     `deployment [name]`,
+	Aliases: []string{"deploy"},
 	Short:   "Scans deployment object",
 	Example: `  deployment podinfo --namespace=default`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -24,44 +24,32 @@ var deploymentCmd = &cobra.Command{
 		}
 		name := args[0]
 
-		var buffer bytes.Buffer
-		writer := bufio.NewWriter(&buffer)
-
 		fmt.Println("scanning deployment", name, "in namespace", namespace)
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 		defer cancel()
-		dep, err := kubeClient.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
+		deployment, err := kubeClient.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		dep.TypeMeta = metav1.TypeMeta{
+		deployment.TypeMeta = metav1.TypeMeta{
 			Kind:       "Deployment",
 			APIVersion: "apps/v1",
 		}
-		err = serializer.Encode(dep, writer)
+		var buf []byte
+		buf, err = json.Marshal(deployment)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		if err := writer.Flush(); err != nil {
-			return err
-		}
-
-		kc := kubesec.NewClient(scanURL, scanTimeOut)
-
-		rs, err := kc.ScanDefinition(buffer)
-
+		result, err := kubesec.NewClient().ScanDefinition(buf)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		if err := rs.Dump(os.Stdout); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		kubesec.DumpReport(result, os.Stdout)
 
 		return nil
 	},
