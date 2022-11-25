@@ -24,6 +24,11 @@ var podCmd = &cobra.Command{
 		}
 		name := args[0]
 
+		kubeClient, err := newKubeClient(kubeconfig)
+		if err != nil {
+			return err
+		}
+
 		var buffer bytes.Buffer
 		writer := bufio.NewWriter(&buffer)
 
