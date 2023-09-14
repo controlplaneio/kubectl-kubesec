@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
-	k8s.io/apimachinery v0.28.1
+	k8s.io/apimachinery v0.28.2
 	k8s.io/client-go v0.28.1
 )
 
