@@ -25,6 +25,7 @@ var (
 	serializer            *kjson.Serializer
 	scanTimeOut           int
 	scanURL               string
+	kubeContext           string // kubernetes context to use that is present in the kubeconfig
 )
 
 func Execute() {
@@ -33,8 +34,11 @@ func Execute() {
 	rootCmd.PersistentFlags().IntVarP(&scanTimeOut, "timeout", "t", 120, "Scan timeout in seconds")
 	rootCmd.PersistentFlags().StringVarP(&scanURL, "url", "u", "https://v2.kubesec.io", "URL to send the request for scanning")
 	rootCmd.PersistentFlags().StringVarP(&kubeconfig, "kubeconfig", "k", "", "Path to kubeconfig, overrides KUBECONFIG environment variable")
+	rootCmd.PersistentFlags().StringVarP(&kubeContext, "context", "c", "", "kubernetes context to use in kubeconfig")
 
-	serializer = kjson.NewYAMLSerializer(kjson.DefaultMetaFactory, scheme.Scheme, scheme.Scheme)
+	serializer = kjson.NewSerializerWithOptions(kjson.DefaultMetaFactory, scheme.Scheme, scheme.Scheme, kjson.SerializerOptions{
+		Yaml: true,
+	})
 
 	// commands
 	rootCmd.AddCommand(versionCmd)
@@ -56,6 +60,7 @@ func newKubeClient(kubeconfig string) (*kubernetes.Clientset, error) {
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
+
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create a new Clienset: %w", err)
 	}
@@ -72,6 +77,11 @@ func newClientConfig(kubeconfig string) (*rest.Config, error) {
 	loadingRules.ExplicitPath = kubeconfig
 
 	configOverrides := &clientcmd.ConfigOverrides{}
+
+	// if kubeContext is not empty, it will override the current context
+	if kubeContext != "" {
+		configOverrides.CurrentContext = kubeContext
+	}
 
 	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
 

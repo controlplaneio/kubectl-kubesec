@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -29,7 +28,6 @@ func NewClient(url string, timeOutSec int) *KubesecClient {
 
 // ScanDefinition scans the provided resource definition.
 func (kc *KubesecClient) ScanDefinition(def bytes.Buffer) (KubeSecResults, error) {
-
 	ctx := context.Background()
 
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(kc.TimeOutSec)*time.Second)
@@ -37,7 +35,6 @@ func (kc *KubesecClient) ScanDefinition(def bytes.Buffer) (KubeSecResults, error
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, kc.URL, &def)
-
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +46,6 @@ func (kc *KubesecClient) ScanDefinition(def bytes.Buffer) (KubeSecResults, error
 	client := &http.Client{}
 
 	resp, err := client.Do(req.WithContext(ctx))
-
 	if err != nil {
 		return nil, err
 	}
@@ -60,8 +56,7 @@ func (kc *KubesecClient) ScanDefinition(def bytes.Buffer) (KubeSecResults, error
 		return nil, fmt.Errorf("got %v response from %v instead of 200 OK", resp.StatusCode, kc.URL)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
