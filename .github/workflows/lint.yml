@@ -26,4 +26,4 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run yamllint
-        uses: reviewdog/action-yamllint@v1.8
+        uses: reviewdog/action-yamllint@v1.9
