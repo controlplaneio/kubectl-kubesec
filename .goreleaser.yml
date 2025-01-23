@@ -26,7 +26,10 @@ builds:
         goarch: arm
     env:
       - CGO_ENABLED=0
-
+    ldflags:
+      - -s -w
+      - -X github.com/controlplaneio/kubectl-kubesec/v2/pkg/version.VERSION={{.Version}}
+      - -X github.com/controlplaneio/kubectl-kubesec/v2/pkg/version.REVISION={{.FullCommit}}
 checksum:
   name_template: "{{ .ProjectName }}_checksums.txt"
 
